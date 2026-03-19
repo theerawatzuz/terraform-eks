@@ -18,21 +18,44 @@ module "vpc" {
 }
 
 module "eks" {
-    source = "terraform-aws-modules/eks/aws"
+    source  = "terraform-aws-modules/eks/aws"
     version = "~> 20.0"
 
-    cluster_name = "sre-demo"
-    cluster_version = "1.29"
+    cluster_name    = "sre-demo"
+    cluster_version = "1.32"
 
-    vpc_id = module.vpc.vpc_id
+    vpc_id     = module.vpc.vpc_id
     subnet_ids = module.vpc.public_subnets
+
+    cluster_endpoint_public_access = true
+
+    enable_irsa = true
+
+    cluster_addons = {
+        coredns = {}
+        kube-proxy = {}
+        vpc-cni = {}
+    }
 
     eks_managed_node_groups = {
         default = {
-            instance_types = ["t3.micro"]
-            min_size = 1
-            max_size = 3
+            instance_types = ["m7i-flex.large"]
+
+            min_size     = 1
+            max_size     = 3
             desired_size = 1
+
+            capacity_type = "ON_DEMAND"
+
+            labels = {
+                role = "general"
+            }
         }
+    }
+
+    tags = {
+        Environment = "lab"
+        Project     = "sre-demo"
+        Terraform   = "true"
     }
 }
