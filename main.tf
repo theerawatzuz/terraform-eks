@@ -11,6 +11,10 @@ module "vpc" {
     enable_nat_gateway = false
 
     map_public_ip_on_launch = true
+
+    public_subnet_tags = {
+        "kubernetes.io/role/elb" = "1"
+    }
 }
 
 module "eks" {
@@ -25,7 +29,7 @@ module "eks" {
 
     eks_managed_node_groups = {
         default = {
-            instance_types = ["t3.medium"]
+            instance_types = ["t3.micro"]
             min_size = 1
             max_size = 3
             desired_size = 1
