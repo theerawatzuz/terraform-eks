@@ -37,6 +37,15 @@ module "eks" {
         coredns = {}
         kube-proxy = {}
         vpc-cni = {}
+        aws-ebs-csi-driver = {
+            service_account_role_arn = module.ebs_csi_irsa.iam_role_arn
+        }
+        aws-efs-csi-driver = {
+            service_account_role_arn = module.efs_csi_irsa.iam_role_arn
+        }
+        amazon-cloudwatch-observability = {
+            service_account_role_arn = module.cloudwatch_observability_irsa.iam_role_arn
+        }
     }
 
     eks_managed_node_groups = {
@@ -79,6 +88,36 @@ module "cluster_autoscaler_irsa" {
     main = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:cluster-autoscaler"]
+    }
+  }
+}
+
+module "ebs_csi_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.5"
+
+  role_name             = "ebs-csi-controller"
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+}
+
+module "efs_csi_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.5"
+
+  role_name             = "efs-csi-controller"
+  attach_efs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
     }
   }
 }
