@@ -1,19 +1,3 @@
-# Namespace สำหรับ monitoring
-resource "kubernetes_namespace" "monitoring" {
-  depends_on = [module.eks]
-  
-  metadata {
-    name = "monitoring"
-    
-    labels = {
-      name = "monitoring"
-      "pod-security.kubernetes.io/enforce" = "privileged"
-      "pod-security.kubernetes.io/audit"   = "privileged"
-      "pod-security.kubernetes.io/warn"    = "privileged"
-    }
-  }
-}
-
 # IAM Role สำหรับ CloudWatch integration
 module "cloudwatch_observability_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
@@ -38,7 +22,7 @@ module "cloudwatch_observability_irsa" {
   }
 }
 
-# Amazon Managed Prometheus Workspace (optional)
+# Amazon Managed Prometheus Workspace
 resource "aws_prometheus_workspace" "main" {
   alias = "sre-demo-prometheus"
   
@@ -48,7 +32,7 @@ resource "aws_prometheus_workspace" "main" {
   }
 }
 
-# CloudWatch Log Group สำหรับ container insights
+# CloudWatch Log Groups สำหรับ container insights
 resource "aws_cloudwatch_log_group" "container_insights" {
   name              = "/aws/containerinsights/sre-demo/application"
   retention_in_days = 7
