@@ -40,12 +40,12 @@ module "eks" {
     }
 
     eks_managed_node_groups = {
-        default_v2 = {
+        default = {
             instance_types = ["m7i-flex.large"]
 
             min_size     = 1
-            max_size     = 3
-            desired_size = 2
+            max_size     = 4
+            desired_size = 1
 
             capacity_type = "ON_DEMAND"
 
@@ -53,9 +53,9 @@ module "eks" {
                 role = "general"
             }
 
-           tags = {
-            "k8s.io/cluster-autoscaler/enabled" = "true"
-            "k8s.io/cluster-autoscaler/sre-demo" = "owned"
+            tags = {
+                "k8s.io/cluster-autoscaler/enabled" = "true"
+                "k8s.io/cluster-autoscaler/sre-demo" = "owned"
             }
         }
     }
@@ -83,41 +83,67 @@ module "cluster_autoscaler_irsa" {
   }
 }
 
-resource "helm_release" "cluster_autoscaler" {
-  depends_on = [module.eks]
-
-  name       = "cluster-autoscaler"
-  repository = "https://kubernetes.github.io/autoscaler"
-  chart      = "cluster-autoscaler"
-  namespace  = "kube-system"
-
-  set {
-    name  = "autoDiscovery.clusterName"
-    value = "sre-demo"
-  }
-
-  set {
-    name  = "awsRegion"
-    value = "ap-southeast-1"
-  }
-
-  set {
-    name  = "cloudProvider"
-    value = "aws"
-  }
-
-  set {
-    name  = "rbac.serviceAccount.create"
-    value = "true"
-  }
-
-  set {
-    name  = "rbac.serviceAccount.name"
-    value = "cluster-autoscaler"
-  }
-
-  set {
-    name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.cluster_autoscaler_irsa.iam_role_arn
-  }
-}
+# Cluster Autoscaler installed manually via Helm/kubectl
+# resource "helm_release" "cluster_autoscaler" {
+#   depends_on = [module.eks]
+#
+#   name       = "cluster-autoscaler"
+#   repository = "https://kubernetes.github.io/autoscaler"
+#   chart      = "cluster-autoscaler"
+#   namespace  = "kube-system"
+#
+#   set {
+#     name  = "autoDiscovery.clusterName"
+#     value = "sre-demo"
+#   }
+#
+#   set {
+#     name  = "awsRegion"
+#     value = "ap-southeast-1"
+#   }
+#
+#   set {
+#     name  = "cloudProvider"
+#     value = "aws"
+#   }
+#
+#   set {
+#     name  = "rbac.serviceAccount.create"
+#     value = "true"
+#   }
+#
+#   set {
+#     name  = "rbac.serviceAccount.name"
+#     value = "cluster-autoscaler"
+#   }
+#
+#   set {
+#     name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+#     value = module.cluster_autoscaler_irsa.iam_role_arn
+#   }
+#
+#   set {
+#     name  = "extraArgs.scale-down-enabled"
+#     value = "true"
+#   }
+#
+#   set {
+#     name  = "extraArgs.scale-down-delay-after-add"
+#     value = "10m"
+#   }
+#
+#   set {
+#     name  = "extraArgs.scale-down-unneeded-time"
+#     value = "10m"
+#   }
+#
+#   set {
+#     name  = "extraArgs.skip-nodes-with-local-storage"
+#     value = "false"
+#   }
+#
+#   set {
+#     name  = "extraArgs.skip-nodes-with-system-pods"
+#     value = "false"
+#   }
+# }
